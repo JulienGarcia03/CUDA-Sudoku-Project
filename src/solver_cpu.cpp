@@ -43,18 +43,33 @@ namespace {
 }
 
 // batch solver for the performance baseline
-bool solve_sudoku_cpu_batch(const int* in_boards, int* out_boards, int batch_size) {
-    if (!in_boards || !out_boards || batch_size <= 0) return false;
-
-    for (int i = 0; i < batch_size; ++i) {
-        const int* src = in_boards + (i * CELLS);
-        int* dst = out_boards + (i * CELLS);
-
-        // copy input puzzle to the output buffer to solve it in place
-        std::memcpy(dst, src, CELLS * sizeof(int));
-
-        if (!solve_recursive(dst)) {
+bool is_board_valid(const int* board) {
+    for (int i = 0; i < CELLS; ++i) {
+        if (board[i] != 0) {
+            int val = board[i];
+            // Temporarily clear the cell to check if the value was legal
+            const_cast<int*>(board)[i] = 0; 
+            bool ok = is_valid(board, i, val);
+            const_cast<int*>(board)[i] = val;
+            if (!ok) return false;
         }
     }
     return true;
+}
+
+bool solve_sudoku_cpu_batch(const int* in_boards, int* out_boards, int batch_size) {
+    if (!in_boards || !out_boards || batch_size <= 0) return false;
+    bool all_ok = true;
+
+    for (int i = 0; i < batch_size; ++i) {
+        const int* src = in_boards + (i * 81);
+        int* dst = out_boards + (i * 81);
+        std::memcpy(dst, src, 81 * sizeof(int));
+
+        // if the CPU fails to solve, mark batch as suspect
+        if (!solve_recursive(dst)) {
+            all_ok = false;
+        }
+    }
+    return all_ok; 
 }
