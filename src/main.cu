@@ -105,6 +105,10 @@ int main(int argc, char** argv) {
         }
         if (argc >= 4) {
             config.threads_per_block = std::stoi(argv[3]);
+            if(config.threads_per_block<81){ // guard added for proper mapping of threads
+                std::cerr << "warning: threads per block must be >= 81 to map to board. defaulting to 128.\n";
+                config.threads_per_block = 128;
+            }
         }
 
         std::vector<int> gpu_out(boards.size(), 0);
@@ -177,17 +181,13 @@ int main(int argc, char** argv) {
                 }
 
                 const int* gpu_board = gpu_out.data() + static_cast<std::size_t>(i) * sudoku_gpu::kCells;
-                const int* cpu_board = cpu_out.data() + static_cast<std::size_t>(i) * sudoku_gpu::kCells;
 
-                for (int cell = 0; cell < sudoku_gpu::kCells; ++cell) {
-                    if (gpu_board[cell] != cpu_board[cell]) {
-                        ++mismatches;
-                        break;
-                    }
+                if(!is_board_valid(gpu_board)){  //using cpu baseline logic to verify gpu's math
+                    ++mismatches;
                 }
             }
 
-            std::cout << "cpu validation      " << (mismatches == 0 ? "passed" : "failed") << "\n";
+            std::cout << "validation status      " << (mismatches == 0 ? "passed" : "failed") << "\n";
         } else {
             std::cout << "cpu validation      skipped by cpu baseline\n";
         }

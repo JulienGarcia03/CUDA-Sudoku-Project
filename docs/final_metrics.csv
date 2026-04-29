@@ -1,0 +1,10 @@
+dataset, threads, boards_per_second
+easy,64,1187.0
+easy,128,1097.3
+easy,256,1115.6
+medium,64,733.9
+medium,128,631.0
+medium,256,698.5
+hard,64,217.3
+hard,128,216.6
+hard,256,220.2
