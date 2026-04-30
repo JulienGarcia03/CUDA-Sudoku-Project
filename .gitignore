@@ -1,1 +1,9 @@
 .vs/
+*.vcproj.user
+x64/
+Debug/
+Release/
+build/
+Release/
+build/
+bin/
